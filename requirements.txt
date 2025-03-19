@@ -1,0 +1,5 @@
+google-cloud-aiplatform
+sentence-transformers
+serpapi
+python-dotenv
+requests
