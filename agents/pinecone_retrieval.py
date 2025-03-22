@@ -39,12 +39,35 @@ def retrieve_product(product_id: str):
         print(f"Error retrieving product: {e}")
         return None
 
-# Example usage
-product_id_to_retrieve = "Galaxy Z Fold5"
-retrieved_product = retrieve_product(product_id_to_retrieve)
 
-if retrieved_product:
-    print("Retrieved Product:")
-    print(retrieved_product)
-else:
-    print("Product not found.")
+def retrieve_product_by_brand(brand: str):
+    try:
+        query_results = index.query(
+            vector=[0.0] * 768,  # Dummy vector, as it's required but ignored when using a filter
+            top_k=10,  # Adjust as needed to retrieve more results
+            filter={
+                "brand": {"$eq": brand}
+            },
+            include_metadata=True  # Ensure metadata is included in the results
+        )
+
+        if query_results.matches:
+            # Return the metadata of the matched vectors
+            products = [match.metadata for match in query_results.matches]
+            return products
+        else:
+            return None
+    except Exception as e:
+        print(f"Error retrieving products by brand: {e}")
+        return None
+
+# Example usage
+# product_id_to_retrieve = "Galaxy Z Fold5"
+# retrieved_product = retrieve_product(product_id_to_retrieve)
+# retrieved_product = retrieve_product_by_brand("Google")
+#
+# if retrieved_product:
+#     print("Retrieved Product:")
+#     print(retrieved_product)
+# else:
+#     print("Product not found.")
