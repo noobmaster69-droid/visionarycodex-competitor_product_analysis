@@ -50,18 +50,17 @@ app.add_middleware(
 #                     "brand": brand,
 #                     "model": model,
 #                     "category": product_name,
-#                     "good_features": review_data_json[i]["good_features"],
-#                     "bad_features": review_data_json[i]["bad_features"],
-#                     "other_data": product_screen_data[i],
-#                     "summary": review_data_json[i]["summary"]
+#                     "features": review_data_json[i]["good_features"],
+#                     "insights": {},
+#                     "reviews": {}
 #                 }
 #                 final_output.append(product_details)
 #                 upsert_data(product_details)
 #         except Exception as e:
 #             raise HTTPException(status_code=500, detail=str(e))
 #     return final_output
-#
-# print(rundown("MobilePhones", "Samsung, Apple"))
+
+# print(rundown("MobilePhones", "Xiaomi"))
 
 @app.get("/fetch/")
 async def analyze_product(product_name: str = Query(...), company_names_input: str = Query(...)):
@@ -83,31 +82,30 @@ async def analyze_product(product_name: str = Query(...), company_names_input: s
         return final_output
     else:
         company_names_input = ", ".join(map(str, companies_to_search))
-        google_shopping_data = scrape_shopping_data(product_name, company_names_input)
-        product_screen_data = scrape_data_from_link(google_shopping_data)
-        review_data = get_review_data(product_screen_data)
+    google_shopping_data = scrape_shopping_data(product_name, company_names_input)
+    product_screen_data = scrape_data_from_link(google_shopping_data)
+    review_data = get_review_data(product_screen_data)
 
-        try:
-            shopping_results = json.loads(google_shopping_data)['shopping_results']
-            review_data_json = json.loads(review_data)
-            for i in range(len(shopping_results)):  # Use shopping_results instead of google_shopping_data
-                item_name = shopping_results[i]['title']
-                parts = item_name.split(' ', 1)
-                brand = parts[0]
-                model = parts[1]
-                product_details = {
-                    "brand": brand,
-                    "model": model,
-                    "category": product_name,
-                    "good_features": review_data_json[i]["good_features"],
-                    "bad_features": review_data_json[i]["bad_features"],
-                    "other_data": product_screen_data[i],
-                    "summary": review_data_json[i]["summary"]
-                }
-                final_output.append(product_details)
-                upsert_data(product_details)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+    try:
+        shopping_results = json.loads(google_shopping_data)['shopping_results']
+        review_data_json = json.loads(review_data)
+        for i in range(len(shopping_results)):  # Use shopping_results instead of google_shopping_data
+            item_name = shopping_results[i]['title']
+            parts = item_name.split(' ', 1)
+            brand = parts[0]
+            model = parts[1]
+            product_details = {
+                "brand": brand,
+                "model": model,
+                "category": product_name,
+                "features": review_data_json[i]["good_features"],
+                "insights": {},
+                "reviews": {}
+            }
+            final_output.append(product_details)
+            upsert_data(product_details)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     return final_output
 
 

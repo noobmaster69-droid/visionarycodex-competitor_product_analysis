@@ -81,6 +81,48 @@ except NotFound:
     print("❌ BigQuery table not found after creation.")
 
 def fetch_all_pinecone_vectors(model_ids):
+    bq_client = bigquery.Client(project=GCP_PROJECT_ID)
+    dataset_ref = bq_client.dataset(BQ_DATASET)
+    table_ref = dataset_ref.table(BQ_TABLE)
+
+    # === Delete and Create BigQuery Dataset ===
+
+    try:
+        bq_client.delete_dataset(dataset_ref, delete_contents=True, not_found_ok=True)
+        print("✅ BigQuery dataset deleted.")
+    except Exception as e:
+        print(f"❌ Error deleting dataset: {e}")
+
+    dataset = bigquery.Dataset(dataset_ref)
+    dataset.location = REGION
+    bq_client.create_dataset(dataset)
+    print("✅ BigQuery dataset created.")
+
+    # Verify dataset creation
+    try:
+        bq_client.get_dataset(dataset_ref)
+        print("✅ BigQuery dataset verified.")
+    except NotFound:
+        print("❌ BigQuery dataset not found after creation.")
+
+    schema = [
+        bigquery.SchemaField("model", "STRING"),
+        bigquery.SchemaField("features", "STRING"),
+        bigquery.SchemaField("insights", "STRING"),
+        bigquery.SchemaField("brand", "STRING"),
+        bigquery.SchemaField("reviews", "STRING"),
+    ]
+
+    table = bigquery.Table(table_ref, schema=schema)
+    bq_client.create_table(table)
+    print("✅ BigQuery table created.")
+
+    # Verify table creation
+    try:
+        bq_client.get_table(table_ref)
+        print("✅ BigQuery table verified.")
+    except NotFound:
+        print("❌ BigQuery table not found after creation.")
     result = index.describe_index_stats()
     total_vector_count = result['total_vector_count']
     print(f"Total vector count: {total_vector_count}")
@@ -117,6 +159,24 @@ import logging
 from google.api_core.exceptions import NotFound, InternalServerError, ServiceUnavailable
 
 def upload_to_bigquery(input_data, retries=6, delay=2):
+
+    try:
+        bq_client.delete_dataset(dataset_ref, delete_contents=True, not_found_ok=True)
+        print("✅ BigQuery dataset deleted.")
+    except Exception as e:
+        print(f"❌ Error deleting dataset: {e}")
+
+    dataset = bigquery.Dataset(dataset_ref)
+    dataset.location = REGION
+    bq_client.create_dataset(dataset)
+    print("✅ BigQuery dataset created.")
+
+    # Verify dataset creation
+    try:
+        bq_client.get_dataset(dataset_ref)
+        print("✅ BigQuery dataset verified.")
+    except NotFound:
+        print("❌ BigQuery dataset not found after creation.")
     rows = fetch_all_pinecone_vectors(input_data)
     for attempt in range(retries):
         try:
