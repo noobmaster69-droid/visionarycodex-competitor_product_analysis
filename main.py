@@ -4,6 +4,9 @@ from agents.review_analysis import get_review_data, scrape_data_from_link
 from agents.shopping_results_scraping_agent import scrape_shopping_data
 from agents.pinecone_retrieval import retrieve_product_by_brand
 from utils.data_upload_to_vector_db import upsert_data
+from pydantic import BaseModel
+from utils.upsert_to_big_query import upload_to_bigquery
+from typing import List
 import json
 
 app = FastAPI()
@@ -106,3 +109,11 @@ async def analyze_product(product_name: str = Query(...), company_names_input: s
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
     return final_output
+
+
+@app.post("/update/")
+async def update_products(product_names: List[str]):
+    if not product_names:
+        raise HTTPException(status_code=400, detail="Product list cannot be empty")
+    upload_to_bigquery(product_names)
+    return {"message": "Products updated successfully", "products": product_names}
