@@ -1,4 +1,5 @@
 from collections import defaultdict
+from importlib.metadata import metadata
 
 from fastapi import FastAPI, Query, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,7 @@ from agents.pinecone_retrieval import retrieve_product_by_brand
 from utils.data_upload_to_vector_db import upsert_data
 from agents.visualization_agent import fetch_and_upload_in_batches
 from typing import List
+from utils.retrieve_metadata import get_metadata
 from utils.generate_data_for_db import get_insights, get_company_details
 import json
 
@@ -21,54 +23,58 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# def rundown(product_name, company_names_input):
-#     # company_names_input = ", ".join(map(str, companies_to_search))
-#     """
-#         Analyzes a product based on its name and company, returning a JSON response
-#         containing shopping data, review data, and other relevant information.
-#         """
-#     companies_to_search = []
-#     final_output = []
-#     companies = [word.strip() for word in company_names_input.split(',')]
-#     # for company in companies:
-#     #     # queried_output = retrieve_product(company)
-#     #     queried_output = retrieve_product_by_brand(company)
-#     #     if queried_output is None:
-#     #         companies_to_search.append(company)
-#     #     else:
-#     #         final_output.append(queried_output)
-#     # if (companies_to_search.__len__() == 0):
-#     #     return final_output
-#     # else:
-#     # company_names_input = ", ".join(map(str, companies_to_search))
-#     google_shopping_data = scrape_shopping_data(product_name, company_names_input)
-#     product_screen_data = scrape_data_from_link(google_shopping_data)
-#     review_data = get_review_data(product_screen_data)
-#
-#     try:
-#         shopping_results = json.loads(google_shopping_data)['shopping_results']
-#         review_data_json = json.loads(review_data)
-#         for i in range(len(shopping_results)):  # Use shopping_results instead of google_shopping_data
-#             item_name = shopping_results[i]['title']
-#             parts = item_name.split(' ', 1)
-#             brand = parts[0]
-#             model = parts[1]
-#             insights = get_insights(product_screen_data[i])
-#             product_details = {
-#                 "brand": brand,
-#                 "model": model,
-#                 "category": product_name,
-#                 "features": review_data_json[i]["good_features"],
-#                 "insights": insights,
-#                 "reviews": {}
-#             }
-#             final_output.append(product_details)
-#             upsert_data(product_details)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#     return final_output
-#
-# print(rundown("MobilePhones", "Samsung, Google, Apple"))
+def rundown(category_name, brand_name, company_names_input):
+    # company_names_input = ", ".join(map(str, companies_to_search))
+    """
+        Analyzes a product based on its name and company, returning a JSON response
+        containing shopping data, review data, and other relevant information.
+        """
+    companies_to_search = []
+    final_output = []
+    # companies = [word.strip() for word in company_names_input.split(',')]
+    # for company in companies:
+    #     # queried_output = retrieve_product(company)
+    #     queried_output = retrieve_product_by_brand(company)
+    #     if queried_output is None:
+    #         companies_to_search.append(company)
+    #     else:
+    #         final_output.append(queried_output)
+    # if (companies_to_search.__len__() == 0):
+    #     return final_output
+    # else:
+    # company_names_input = ", ".join(map(str, companies_to_search))
+    google_shopping_data = scrape_shopping_data(product_name, company_names_input)
+    product_screen_data = scrape_data_from_link(google_shopping_data)
+    review_data = get_review_data(product_screen_data)
+
+    try:
+        shopping_results = json.loads(google_shopping_data)['shopping_results']
+        review_data_json = json.loads(review_data)
+        for i in range(len(shopping_results)):  # Use shopping_results instead of google_shopping_data
+
+            meta_data = get_metadata(i, brand_name, product_screen_data, shopping_results, review_data_json)
+            item_name = shopping_results[i]['title']
+            parts = item_name.split(' ', 1)
+            competitorName = parts[0]
+            model = parts[1]
+            insights = get_insights(product_screen_data[i])
+            product_details = {
+                "id": id,
+                "competitorName": competitorName,
+                "model": model,
+                "category": product_name,
+                "features": review_data_json[i]["good_features"],
+                "insights": insights,
+                "reviews": {}
+            }
+            final_output.append(product_details)
+            upsert_data(product_details)
+            id = id+1
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return final_output
+
+print(rundown("MobilePhones", "Asus"))
 
 @app.get("/fetch/")
 async def analyze_product(product_name: str = Query(...), company_names_input: str = Query(...)):

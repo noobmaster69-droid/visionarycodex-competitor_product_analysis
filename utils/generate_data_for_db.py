@@ -20,7 +20,7 @@ MODEL = GenerativeModel("gemini-2.0-flash-lite-001")
 
 def get_insights(input_data):
     input_data = json.dumps(input_data)
-    prompt = "For the given input, please generate insights. The expected output is to be of this format(This here is a sample data): {'popularity': 'High', 'priceTrend': 'Rising', 'demand': 'High', 'marketShare': '18%'}, Please provide it as a JSONString. The input is: "+input_data;
+    prompt = "For the given input, please generate insights. The expected output is to be of this format(This here is a sample data): {'popularity': 'High', 'priceTrend': 'Rising', 'demand': 'High', 'Availability': 'Available to buy from'}, Please provide it as a JSONString. The input is: "+input_data;
     response_text = MODEL.generate_content(prompt).text
     response_text = response_text[len('```json'):]
     response_text = response_text[:-len('```')]
@@ -52,6 +52,23 @@ def get_company_details(category, input_data):
         "competitors": output
     }
     return response
+
+def get_feature_importance(prices, rating, features, title):
+    prompt = "For the product: "+title+". These are the prices: "+prices+", rating: "+rating+", Features: "+features+". Please generate featureImportance for this product on this format and provide it as a JSONString: {
+        "price" : 0,
+        "userRating" : 0,
+        "specialFeatures" : 0,
+    }"
+    response_text = MODEL.generate_content(prompt).text
+    match = re.search(r"```json\s*([\s\S]*?)\s*```", response_text)
+    response_text = match.group(1).strip()
+    output = json.loads(response_text)
+    featureImportance = {
+        "price" : 0,
+        "userRating" : 0,
+        "specialFeatures" : 0,
+    }
+    return output
 
 # get_company_details("electronics", "Apple")
 

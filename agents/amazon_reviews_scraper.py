@@ -28,11 +28,20 @@ def scrape_reviews(asin):
         "domain": "com",
         "page": "1"
     }
-
     response = requests.get("https://api.scrapingdog.com/amazon/reviews", params=params)
-
+    data = {}
     if response.status_code == 200:
         data = response.json()
-        return data
     else:
         print(f"Request failed with status code: {response.status_code}")
+    reviews = []
+    # "average_rating": data['rating']
+    for customer_review in data['customer_reviews']:
+        review = {
+            "user": customer_review['user'],
+            "rating": customer_review['rating'],
+            "comment": customer_review['review'],
+            "date": customer_review['date']
+        }
+        reviews.append(review)
+    return reviews
