@@ -70,7 +70,7 @@ app.add_middleware(
 #
 # print(rundown("MobilePhones", "Samsung, Google, Apple"))
 
-@app.get("/fetch")
+@app.get("/fetch/")
 async def analyze_product(product_name: str = Query(...), company_names_input: str = Query(...)):
     """
     Analyzes a product based on its name and company, returning a JSON response
@@ -117,7 +117,6 @@ async def analyze_product(product_name: str = Query(...), company_names_input: s
             raise HTTPException(status_code=500, detail=str(e))
     return final_output
 
-
 @app.post("/update/")
 async def update_products(product_names: List[str]):
     if not product_names:
@@ -125,11 +124,11 @@ async def update_products(product_names: List[str]):
     fetch_and_upload_in_batches(product_names)
     return {"message": "Products updated successfully", "products": product_names}
 
-@app.get("/fetch-categories")
+@app.get("/fetch-categories/")
 async def fetch_categories():
     response = {
         "success": True,
-        "message": "Dummy category fetch successful",
+        "message": "Category fetch successful",
         "categories": [
             {"id": 1, "categoryName": "electronics"},
             {"id": 2, "categoryName": "fashion"},
@@ -140,8 +139,8 @@ async def fetch_categories():
     }
     return response
 
-@app.post("/fetch-competitors")
-async def update_products(request_body: dict = Body(...)):
+@app.post("/fetch-competitors/")
+async def fetch_competitors(request_body: dict = Body(...)):
     category_name = request_body.get("category_name")
     brand_name = request_body.get("brand_name")
     try:
