@@ -1,3 +1,4 @@
+import logging
 import os
 import json
 from vertexai.generative_models import GenerativeModel
@@ -12,7 +13,7 @@ load_dotenv()
 PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 LOCATION = os.getenv("GCP_LOCATION")
 vertexai.init(project=PROJECT_ID, location=LOCATION)
-MODEL = GenerativeModel("gemini-1.5-pro-002")
+MODEL = GenerativeModel("gemini-2.0-flash-lite-001")
 
 # SerpAPI key
 SERPAPI_KEY = os.getenv("SERPAPI_API_KEY")
@@ -26,10 +27,16 @@ def analyze_product_reviews(prompt):
     # Extract review filters and sort by count in descending order
     # prompt = prompt + " Provide the output in a JSON String format, where the Key's are the 'title' and the values being the 'good_features', 'bad_features', and 'summary' of the product."
     response_text = MODEL.generate_content(prompt).text
+    match = re.search(r"```json\s*([\s\S]*?)\s*```", response_text)
     response_text = response_text[len('```json'):]
     response_text = response_text[:-len('```')]
     response_text.strip()
-    json_objects = json.loads(response_text)
+    response_text = clean_json_string(response_text)
+    response_text = match.group(1).strip()
+    try:
+        json_objects = json.loads(response_text)
+    except json.JSONDecodeError:
+        logging.info("Wrong JSON format")
     return json.dumps(json_objects, indent=2)
 def get_review_data(input_data):
 
@@ -49,13 +56,22 @@ def clean_json_string(json_string):
     """
     Cleans a JSON string by removing control characters and ensuring proper escaping.
     """
+    """
+    Escapes unescaped special characters in a JSON string to ensure it is valid.
+    """
+    # Replace unescaped single quotes with escaped single quotes
+    json_string = json_string.replace("'", "\\'")
+
+    # Replace unescaped double quotes with escaped double quotes
+    json_string = json_string.replace('"', '\\"')
+
+    # Replace unescaped backslashes with escaped backslashes
+    json_string = json_string.replace('\\', '\\\\')
+
     # Remove control characters
-    cleaned_string = re.sub(r'[\x00-\x1F]', '', json_string)
+    json_string = re.sub(r'[\x00-\x1F]', '', json_string)
 
-    # Ensure backslashes are properly escaped
-    cleaned_string = cleaned_string.replace('\\', '\\\\')
-
-    return cleaned_string
+    return json_string
 
 def scrape_data_from_link(input_data):
     data = json.loads(input_data)

@@ -106,19 +106,20 @@ def upsert_data(products):
 
     # Store recipe data in the index
     try:
-        for product in products:
-            combined_text = f"Brand: {product['brand']}, Model: {product['model']}, Category: {product['category']}, Features: {product['features']}, Insights: {product['insights']}, Reviews: {product['reviews']}"
-            embedding = generate_embeddings(combined_text)
-            index.upsert(vectors=[
-                (product["model"], embedding, {
-                    "brand": product["brand"],
-                    "model": product["model"],
-                    "category": product["category"],
-                    "features": str(product["features"]),
-                    "insights": str(product["insights"]),
-                    "reviews": str(product["reviews"])
-                })
-            ])
+        combined_text = f"Brand: {products['brand']}, Model: {products['model']}, Category: {products['category']}, Features: {products['features']}, Insights: {products['insights']}, Reviews: {products['reviews']}"
+        embedding = generate_embeddings(combined_text)
+        index.upsert(vectors=[
+            (products["model"], embedding, {
+                "brand": products["brand"],
+                "model": products["model"],
+                "category": products["category"],
+                "features": str(products["features"]),
+                "insights": str(products["insights"]),
+                "reviews": str(products["reviews"])
+            })
+        ])
+
+
         logger.info("Successfully uploaded data to Pinecone index")
     except Exception as e:
         logger.error("Failed to upload data to Pinecone index: %s", e)

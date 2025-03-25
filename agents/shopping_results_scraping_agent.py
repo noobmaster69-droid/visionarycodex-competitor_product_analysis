@@ -13,7 +13,7 @@ def scrape_shopping_data(product_name, company_names_input):
     """
     Scrapes data from the Google Shopping API for the given product name and company names.
     """
-    api_key = "67e10234eebd3f2f153b9962"
+    api_key = "67e19fc7eccb45caac0ab4bb"
     url = "https://api.scrapingdog.com/google_shopping"
     prompt = "Buy "+product_name+": "+company_names_input+" from Amazon"
     params = {
