@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from agents.review_analysis import get_review_data, scrape_data_from_link
 from agents.shopping_results_scraping_agent import scrape_shopping_data
 from agents.pinecone_retrieval import retrieve_product_by_brand
-from utils.data_upload_to_vector_db import upsert_data, upsert_data_new
+from utils.upsert_search_data_to_vector_db import upsert_data, upsert_data_new
 from agents.visualization_agent import fetch_and_upload_in_batches
 from typing import List
 from utils.retrieve_metadata import get_metadata
@@ -64,7 +64,7 @@ app.add_middleware(
 # brands = ["Realme"]
 # print(rundown("MobilePhones", "Oppo", brands))
 
-@app.get("/fetch-products/")
+@app.post("/fetch-products/")
 async def analyze_product(product_name: str = Query(...), brand_name: str = Query(...), company_names_input: str = Query(...)):
     """
     Analyzes a product based on its name and company, returning a JSON response
