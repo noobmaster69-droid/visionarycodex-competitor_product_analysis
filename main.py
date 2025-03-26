@@ -7,7 +7,7 @@ from agents.review_analysis import get_review_data, scrape_data_from_link
 from agents.shopping_results_scraping_agent import scrape_shopping_data
 from agents.pinecone_retrieval import retrieve_product_by_brand
 from utils.upsert_search_data_to_vector_db import upsert_data, upsert_data_new
-from agents.visualization_agent import fetch_and_upload_in_batches
+# from agents.visualization_agent import fetch_and_upload_in_batches
 from typing import List
 from utils.retrieve_metadata import get_metadata
 from utils.generate_data_for_db import get_insights, get_company_details
@@ -64,12 +64,23 @@ app.add_middleware(
 # brands = ["Realme"]
 # print(rundown("MobilePhones", "Oppo", brands))
 
-@app.post("/fetch-products/")
-async def analyze_product(product_name: str = Query(...), brand_name: str = Query(...), company_names_input: List[str] = Query(...)):
+# from typing import List
+# from fastapi import FastAPI, Query, HTTPException, Body
+#
+# app = FastAPI()
+
+@app.get("/fetch-products/")
+async def analyze_product():
     """
-    Analyzes a product based on its name and company, returning a JSON response
+    Analyzes a product based on its name and companies, returning a JSON response
     containing shopping data, review data, and other relevant information.
     """
+    # product_name: str = Body(...),
+    # brand_name: str = Body(...),
+    # company_names_input: List[str] = Body(...),
+    product_name = 'MobilePhones'
+    brand_name = 'Apple'
+    company_names_input= ["Samsung", "Google"]
     companies_to_search = []
     final_output = []
     companies = company_names_input
@@ -80,26 +91,25 @@ async def analyze_product(product_name: str = Query(...), brand_name: str = Quer
             companies_to_search.append(company)
         else:
             final_output.append(queried_output)
-    if (companies_to_search.__len__() == 0):
+    if not companies_to_search:
         return final_output
     else:
-
-        google_shopping_data = scrape_shopping_data(product_name, ", ".join(company_names_input))
+        google_shopping_data = scrape_shopping_data(product_name, ", ".join(companies_to_search))
         product_screen_data = scrape_data_from_link(google_shopping_data)
         review_data = get_review_data(product_screen_data)
 
         try:
             shopping_results = json.loads(google_shopping_data)['shopping_results']
             review_data_json = json.loads(review_data)
-            for i in range(len(shopping_results)):  # Use shopping_results instead of google_shopping_data
-
+            for i in range(len(shopping_results)):
                 meta_data = get_metadata(i, brand_name, product_screen_data, shopping_results, review_data_json)
                 upsert_data_new(meta_data)
                 meta_data["id"] = i
                 final_output.append(meta_data)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        if final_output.__len__() is not 0:
+
+        if final_output:
             response = {
                 "success": True,
                 "message": "Products Fetched Successfully",
@@ -114,12 +124,12 @@ async def analyze_product(product_name: str = Query(...), brand_name: str = Quer
             }
             return response
 
-@app.post("/update/")
-async def update_products(product_names: List[str]):
-    if not product_names:
-        raise HTTPException(status_code=400, detail="Product list cannot be empty")
-    fetch_and_upload_in_batches(product_names)
-    return {"message": "Products updated successfully", "products": product_names}
+# @app.post("/update/")
+# async def update_products(product_names: List[str]):
+#     if not product_names:
+#         raise HTTPException(status_code=400, detail="Product list cannot be empty")
+#     fetch_and_upload_in_batches(product_names)
+#     return {"message": "Products updated successfully", "products": product_names}
 
 @app.get("/fetch-categories/")
 async def fetch_categories():
@@ -127,11 +137,11 @@ async def fetch_categories():
         "success": True,
         "message": "Category fetch successful",
         "categories": [
-            {"id": 1, "categoryName": "electronics"},
-            {"id": 2, "categoryName": "fashion"},
-            {"id": 3, "categoryName": "home"},
-            {"id": 4, "categoryName": "beauty"},
-            {"id": 5, "categoryName": "sports"}
+            {"id": 1, "categoryName": "MobilePhones"},
+            {"id": 2, "categoryName": "Fashion"},
+            {"id": 3, "categoryName": "Home"},
+            {"id": 4, "categoryName": "Beauty"},
+            {"id": 5, "categoryName": "Sports"}
         ]
     }
     return response
