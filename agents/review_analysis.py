@@ -28,10 +28,6 @@ def analyze_product_reviews(prompt):
     # prompt = prompt + " Provide the output in a JSON String format, where the Key's are the 'title' and the values being the 'good_features', 'bad_features', and 'summary' of the product."
     response_text = MODEL.generate_content(prompt).text
     match = re.search(r"```json\s*([\s\S]*?)\s*```", response_text)
-    response_text = response_text[len('```json'):]
-    response_text = response_text[:-len('```')]
-    response_text.strip()
-    response_text = clean_json_string(response_text)
     response_text = match.group(1).strip()
     try:
         json_objects = json.loads(response_text)

@@ -1,7 +1,7 @@
 
 import requests
 
-api_key = "67e19fc7eccb45caac0ab4bb"
+api_key = "67e3ef0442f665c983506e3a"
 
 def search_amazon_for_asin(query):
     params = {
@@ -35,13 +35,13 @@ def scrape_reviews(asin):
     else:
         print(f"Request failed with status code: {response.status_code}")
     reviews = []
-    # "average_rating": data['rating']
-    for customer_review in data['customer_reviews']:
-        review = {
-            "user": customer_review['user'],
-            "rating": customer_review['rating'],
-            "comment": customer_review['review'],
-            "date": customer_review['date']
-        }
-        reviews.append(review)
-    return reviews
+    if 'customer_reviews' in data:
+        for customer_review in data['customer_reviews']:
+            review = {
+                "user": customer_review['user'],
+                "rating": customer_review['rating'],
+                "comment": customer_review['review'],
+                "date": customer_review['date']
+            }
+            reviews.append(review)
+        return reviews

@@ -2,12 +2,13 @@ import logging
 
 from bs4 import BeautifulSoup
 import requests
+import re
 
 # Sample HTML (you can replace this with the actual fetched HTML)
 def scrape_data_from_gsmarena(query):
-    link = scrape_for_gsmarena_link(query)
+    url = scrape_for_gsmarena_link(query)
     response = requests.get("https://api.scrapingdog.com/scrape", params={
-        'api_key': '67e19fc7eccb45caac0ab4bb',
+        'api_key': '67e3ef0442f665c983506e3a',
         'url': url,
         'dynamic': 'false',
     })
@@ -131,7 +132,7 @@ def scrape_data_from_gsmarena(query):
     else:
         logging.info("battery table not found.")
 
-    if 'OS' in platform and 'iOS' in platform['OS']:
+    if 'OS' in platform and isinstance(platform['OS'], str) and 'iOS' in platform['OS']:
         assistant = 'Siri'
     else:
         assistant = 'Google Assistant'
@@ -141,25 +142,29 @@ def scrape_data_from_gsmarena(query):
     else:
         dualSim = False
 
-    if '' in body and 'water' in body['']:
-        waterResistance = True
+    if '' in body and isinstance(body[''], str) and 'water' in body['']:
+        match = re.search(r"IP\d+", body[''])
+        if match:
+            waterResistance = match.group(0)
     else:
-        waterResistance = False
+        waterResistance = 'Not Available'
 
-    if 'Charging' in battery and 'wireless' in battery['Charging']:
-        wirelessCharging = True
+    if 'Charging' in battery and isinstance(battery['Charging'], str) and 'wireless' in battery['Charging']:
+        match = re.search(r'(\d+W wireless)', battery['Charging'])
+        if match:
+            wirelessCharging = match.group(1)
     else:
-        wirelessCharging = False
+        wirelessCharging = 'Not Available'
 
-    if 'Bluetooth' in comms and comms['Bluetooth'] is not None:
-        bluetooth = True
+    if 'Bluetooth' in comms and isinstance(comms['Bluetooth'], str)  and comms['Bluetooth'] is not None:
+        bluetooth = comms['Bluetooth']
     else:
-        bluetooth = False
+        bluetooth = 'Not Available'
 
-    if 'WLAN' in comms and comms['WLAN'] is not None:
-        wifi = True
+    if 'WLAN' in comms and isinstance(comms['WLAN'], str) and comms['WLAN'] is not None:
+        wifi = comms['WLAN']
     else:
-        wifi = False
+        wifi = 'Not Available'
 
     if 'Positioning' in comms and 'GPS' in comms['Positioning']:
         gps = True
@@ -170,21 +175,46 @@ def scrape_data_from_gsmarena(query):
         nfc = True
     else:
         nfc = False
+
+    if 'Chipset' in platform:
+        chip = platform['Chipset']
+    else:
+        chip = 'NA'
+    if 'Resolution' in display:
+        displayResolution = display['Resolution']
+    else:
+        displayResolution = 'NA'
+    if 'Type' in battery:
+        bat_capacity = battery['Type']
+    else:
+        bat_capacity = 'NA'
+    if 'Sensors' in features:
+        security = features['Sensors']
+    else:
+        security = 'NA'
+    if 'Weight' in body:
+        weight = body['Weight']
+    else:
+        weight = 'NA'
+    if 'Protection' in display:
+        protection = display['Protection']
+    else:
+        protection = 'NA'
     features = {
-        "chip": platform['Chipset'],
-        "display": display['Resolution'],
-        "battery": battery['Type'],
+        "chip": chip,
+        "display": displayResolution,
+        "battery": bat_capacity,
         "waterResistance": waterResistance,
         "wirelessCharging": wirelessCharging,
-        "security": features['Sensors'].split()[0],
+        "security": security.split()[0],
         "bluetooth": bluetooth,
         "wifi": wifi,
         "gps": gps,
         "nfc": nfc,
         "dualSim": dualSim,
         "assistant": assistant,
-        "weight": body['Weight'],
-        "protection": display['Protection']
+        "weight": weight,
+        "protection": protection
     }
     return features
 
@@ -248,7 +278,7 @@ def scrape_data_from_gsmarena(query):
 
 def scrape_for_gsmarena_link(query):
 
-    api_key = "67e19fc7eccb45caac0ab4bb"
+    api_key = "67e3ef0442f665c983506e3a"
     url = "https://api.scrapingdog.com/google"
     query = query + ' - Full phone specifications - GSMArena.com'
 
@@ -270,4 +300,4 @@ def scrape_for_gsmarena_link(query):
         print(f"Request failed with status code: {response.status_code}")
 
 # link = scrape_for_gsmarena_link('Yu Yureka')
-# scrape_data_from_gsmarena(link)
+# scrape_data_from_gsmarena('https://www.gsmarena.com/google_pixel_9_pro_xl-13217.php')
