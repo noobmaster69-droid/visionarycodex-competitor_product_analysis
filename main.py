@@ -65,14 +65,14 @@ app.add_middleware(
 # print(rundown("MobilePhones", "Oppo", brands))
 
 @app.post("/fetch-products/")
-async def analyze_product(product_name: str = Query(...), brand_name: str = Query(...), company_names_input: str = Query(...)):
+async def analyze_product(product_name: str = Query(...), brand_name: str = Query(...), company_names_input: List[str] = Query(...)):
     """
     Analyzes a product based on its name and company, returning a JSON response
     containing shopping data, review data, and other relevant information.
     """
     companies_to_search = []
     final_output = []
-    companies = [word.strip() for word in company_names_input.split(',')]
+    companies = company_names_input
     for company in companies:
         # queried_output = retrieve_product(company)
         queried_output = retrieve_product_by_brand(company)
@@ -83,7 +83,8 @@ async def analyze_product(product_name: str = Query(...), brand_name: str = Quer
     if (companies_to_search.__len__() == 0):
         return final_output
     else:
-        google_shopping_data = scrape_shopping_data(product_name, company_names_input)
+
+        google_shopping_data = scrape_shopping_data(product_name, ", ".join(company_names_input))
         product_screen_data = scrape_data_from_link(google_shopping_data)
         review_data = get_review_data(product_screen_data)
 
