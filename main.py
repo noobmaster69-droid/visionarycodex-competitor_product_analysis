@@ -98,7 +98,20 @@ async def analyze_product(product_name: str = Query(...), brand_name: str = Quer
                 final_output.append(meta_data)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        return final_output
+        if final_output.__len__() is not 0:
+            response = {
+                "success": True,
+                "message": "Products Fetched Successfully",
+                "products": final_output
+            }
+            return response
+        else:
+            response = {
+                "success": False,
+                "message": "Products not fetched",
+                "products": []
+            }
+            return response
 
 @app.post("/update/")
 async def update_products(product_names: List[str]):
