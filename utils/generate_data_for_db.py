@@ -41,7 +41,7 @@ def get_company_details(category, input_data):
         }
     ]"""
     prompt = "This is the company: "+input_data+ (", what are the competitors that are in the "+category+" for this "
-             "company and what are their details such as founded year, Headquarters, industry, revenue and official website? "
+             "company and what are their details such as founded year, Headquarters, industry, revenue and official website. Please mind that I need only the Company's Popular name, Like For Pixel devices, it shouldn't be Google (Pixel), it should just be Google. And for Motorola your response must be just Motorola and not Motorola(Lenovo). "
              "I need response in this format, use this as a sample: ") +expected_response
     response_text = MODEL.generate_content(prompt).text
     match = re.search(r"```json\s*([\s\S]*?)\s*```", response_text)
